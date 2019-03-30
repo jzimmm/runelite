@@ -166,7 +166,7 @@ public class ClanManager
 		return cleaned.replace('\u00A0', ' ');
 	}
 
-	private static IndexedSprite createIndexedSprite(final Client client, final BufferedImage bufferedImage)
+	public static IndexedSprite createIndexedSprite(final Client client, final BufferedImage bufferedImage)
 	{
 		final IndexColorModel indexedCM = (IndexColorModel) bufferedImage.getColorModel();
 
@@ -188,7 +188,7 @@ public class ClanManager
 		return newIndexedSprite;
 	}
 
-	private static BufferedImage rgbaToIndexedBufferedImage(final BufferedImage sourceBufferedImage)
+	public static BufferedImage rgbaToIndexedBufferedImage(final BufferedImage sourceBufferedImage)
 	{
 		final BufferedImage indexedImage = new BufferedImage(
 			sourceBufferedImage.getWidth(),

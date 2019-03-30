@@ -26,16 +26,24 @@ package net.runelite.client.plugins.twitch;
 
 import com.google.common.base.Strings;
 import com.google.inject.Provides;
+
+
+import java.awt.Color;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Map;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.IndexedSprite;
 import net.runelite.api.ScriptID;
 import net.runelite.api.VarClientInt;
 import net.runelite.api.events.ConfigChanged;
+import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.widgets.Widget;
@@ -60,8 +68,9 @@ import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.ColorUtil;
-import java.awt.Color;
 import net.runelite.client.callback.ClientThread;
+import net.runelite.client.util.ImageUtil;
+import net.runelite.client.game.ClanManager;
 
 @PluginDescriptor(
 	name = "Twitch",
@@ -109,6 +118,8 @@ public class TwitchPlugin extends Plugin implements TwitchListener, ChatboxInput
 	Widget clanChatButtonBackground;
 	Widget clanChatButtonText;
 	Widget clanChatButtonFilterText;
+
+	int glitchPos = -1;
 
 	public boolean getTwitchChatSelected()
 	{
@@ -235,7 +246,7 @@ public class TwitchPlugin extends Plugin implements TwitchListener, ChatboxInput
 
 			chatMessageManager.queue(QueuedMessage.builder()
 				.type(ChatMessageType.TWITCH)
-				.sender(twitchConfig.channel())
+				.sender("<img=" + glitchPos + ">/" + twitchConfig.channel())
 				.name(sender)
 				.runeLiteFormattedMessage(chatMessage)
 				.build());
@@ -405,6 +416,31 @@ public class TwitchPlugin extends Plugin implements TwitchListener, ChatboxInput
 			twitchChatFilterOff.setType(MenuAction.RUNELITE_PRIORITY.getId());
 
 			client.setMenuEntries(newMenu);
+		}
+	}
+
+	private int createTwitchIndexedSprite ()
+	{
+		IndexedSprite[] modIcons = client.getModIcons();
+		final IndexedSprite[] modIconsCopy = Arrays.copyOf(modIcons, modIcons.length + 1);
+		int glitchIndex = modIconsCopy.length - 1;
+		System.out.println(modIconsCopy.length - 1);
+		Image glitchIcon = ImageUtil.getResourceStreamFromClass(TwitchPlugin.class, "glitch.png");
+		BufferedImage bufferedGlitch = ImageUtil.bufferedImageFromImage(glitchIcon);
+		IndexedSprite indexedGlitch = ClanManager.createIndexedSprite(client, ClanManager.rgbaToIndexedBufferedImage(bufferedGlitch));
+
+		modIconsCopy[modIconsCopy.length - 1] = indexedGlitch;
+		client.setModIcons(modIconsCopy);
+
+		return glitchIndex;
+	}
+
+	@Subscribe
+	public void onGameStateChanged(GameStateChanged gameStateChanged)
+	{
+		if (gameStateChanged.getGameState() == GameState.LOGGED_IN && glitchPos == -1)
+		{
+			glitchPos = createTwitchIndexedSprite();
 		}
 	}
 }
